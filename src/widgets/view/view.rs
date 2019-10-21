@@ -148,7 +148,7 @@ impl View {
 
     fn get_click_location(&self, x: u64, y: u64) -> (u64, u64) {
         let lineno = x + self.cache.before() + self.window.start();
-        if let Some(line) = self.cache.lines().get(x as usize) {
+        if let Some(line) = self.cache.lines().get(&x) {
             if y < u64::from(self.cfg.gutter_size) {
                 return (lineno, 0);
             }
@@ -230,13 +230,14 @@ impl View {
         debug!("rendering lines");
         trace!("current cache\n{:?}", self.cache);
 
+        if self.cache.lines().is_empty() {
+            return Ok(());
+        }
+
         // Get the lines that are within the displayed window
-        let lines = self
-            .cache
-            .lines()
-            .iter()
-            .skip(self.window.start() as usize)
-            .take(self.window.size() as usize);
+        let min_index = *self.cache.lines().keys().min().unwrap_or(&0);
+        let range = min_index+self.window.start()..min_index+self.window.start()+self.window.size() as u64;
+        let lines = range.filter_map(|i| self.cache.lines().get(&i));
 
         // Draw the valid lines within this range
         let mut line_strings = String::new();
@@ -412,7 +413,7 @@ impl View {
         }
         // Get the line that has the cursor
         let line_idx = self.cursor.line - self.cache.before();
-        let line = match self.cache.lines().get(line_idx as usize) {
+        let line = match self.cache.lines().get(&line_idx) {
             Some(line) => line,
             None => {
                 error!("no valid line at cursor index {}", self.cursor.line);

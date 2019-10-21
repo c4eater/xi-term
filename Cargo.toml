@@ -13,4 +13,4 @@ termion = "1.5.3"
 tokio = "0.1.21"
 xdg = "2.2.0"
 indexmap = "1.0.2"
-xrl = "0.0.8"
+xrl = { path = "../xrl", version = "0.0.8" }
